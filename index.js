@@ -4,8 +4,13 @@ const https = require('https');
 const express = require('express');
 const TelegramBot = require('node-telegram-bot-api');
 
-// Telegram bot token'ını buraya yazın
-const telegramToken = 'YOUR_TELEGRAM_BOT_TOKEN';
+// Telegram bot token'ı, konsoldan alınacak
+const telegramToken = process.argv[2]; // Token'i komut satırından al
+
+if (!telegramToken) {
+  console.log('Telegram token girin.');
+  process.exit(1);
+}
 
 // Sertifika dosyalarının yolu
 const keyPath = path.join(__dirname, 'https_config', 'key.pem');
@@ -43,7 +48,21 @@ app.get('/', (req, res) => {
 bot.onText(/\/create (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const [name, duration, maxDevices] = match[1].split(' ');
-                                                      // Key kullanımını kontrol et ve ekle
+
+  // Key bilgilerini oluştur ve veritabanına ekle
+  const newKey = {
+    name: name,
+    duration: duration,
+    maxDevices: parseInt(maxDevices),
+    usedDevices: []
+  };
+  
+  keyDB.keys.push(newKey);
+  fs.writeFileSync(dbPath, JSON.stringify(keyDB, null, 2));
+  bot.sendMessage(chatId, `Yeni key oluşturuldu: ${name}`);
+});
+
+// Key kullanımını kontrol et ve ekle
 bot.onText(/\/use_key (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
   const [keyName, deviceId] = match[1].split(' ');
@@ -132,42 +151,7 @@ bot.onText(/\/used_keys/, (msg) => {
   }
 });
 
-// Yeni bir cihaz ekleme komutu (admin özelliği)
-bot.onText(/\/add_device (.+)/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const [keyName, deviceId] = match[1].split(' ');
-
-  // Admin kontrolü
-  const adminId = 'YOUR_ADMIN_TELEGRAM_ID'; // Admin ID'sini buraya yaz
-  if (msg.from.id !== parseInt(adminId)) {
-    bot.sendMessage(chatId, 'Bu komutu kullanma izniniz yok!');
-    return;
-  }
-
-  // Key'i bul
-  const key = keyDB.keys.find(k => k.name === keyName);
-  if (!key) {
-    bot.sendMessage(chatId, `Key bulunamadı: ${keyName}`);
-    return;
-  }
-
-  // Key limitine ulaşılmadıysa, cihaz ekleyelim
-  if (key.usedDevices.length < key.maxDevices) {
-    key.usedDevices.push(deviceId);
-    keyDB.usedKeys.push({
-      keyName: keyName,
-      deviceId: deviceId,
-      date: new Date().toISOString()
-    });
-    fs.writeFileSync(dbPath, JSON.stringify(keyDB, null, 2));
-    bot.sendMessage(chatId, `Yeni cihaz başarıyla eklenmiştir: ${deviceId}`);
-  } else {
-    bot.sendMessage(chatId, `Key limitine ulaşıldığı için cihaz eklenemedi: ${keyName}`);
-  }
-});
-
 // Sunucuyu başlat
 server.listen(port, () => {
   console.log(`Server started on https://localhost:${port}`);
 });
-}
