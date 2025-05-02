@@ -170,3 +170,4 @@ bot.onText(/\/add_device (.+)/, (msg, match) => {
 server.listen(port, () => {
   console.log(`Server started on https://localhost:${port}`);
 });
+}
