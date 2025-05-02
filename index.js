@@ -8,7 +8,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const tokenFilePath = path.join(__dirname, 'telegram_token.txt');
 
 // Bot token'ı dosyadan okuma
-let telegramToken = '';
+let telegramToken = '7578469284:AAGnxT8GYADYKJahPRg71XFNJg6cx6_W7Tc';
 
 // Eğer token dosyası varsa, içeriğini oku
 if (fs.existsSync(tokenFilePath)) {
