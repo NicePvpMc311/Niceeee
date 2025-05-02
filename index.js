@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 // Key oluşturma komutu
 bot.onText(/\/create (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
-  const [name, duration, maxDevices] = match[1].split(' '
+  const [name, duration, maxDevices] = match[1].split(' ');
                                                       // Key kullanımını kontrol et ve ekle
 bot.onText(/\/use_key (.+)/, (msg, match) => {
   const chatId = msg.chat.id;
